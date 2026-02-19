@@ -11,11 +11,6 @@ TWITCH_CLIENT_ID = os.getenv('TWITCH_CLIENT_ID')
 TWITCH_CLIENT_SECRET = os.getenv('TWITCH_CLIENT_SECRET')
 
 def get_twitch_token():
-    """使用环境变量获取 Twitch Access Token"""
-    if not TWITCH_CLIENT_ID or not TWITCH_CLIENT_SECRET:
-        print("Error: Twitch keys not found in environment variables")
-        return None
-        
     url = "https://id.twitch.tv/oauth2/token"
     params = {
         "client_id": TWITCH_CLIENT_ID,
@@ -24,10 +19,13 @@ def get_twitch_token():
     }
     try:
         r = requests.post(url, params=params, timeout=5)
-        return r.json().get("access_token")
+        res_data = r.json()
+        if r.status_code != 200:
+            # 如果报错，返回具体的报错内容，比如 "invalid client"
+            return f"Error_{res_data.get('message', 'Unknown')}"
+        return res_data.get("access_token")
     except Exception as e:
-        print(f"Token Error: {e}")
-        return None
+        return f"Error_Conn_{str(e)}"
 
 def fetch_twitch_count(username):
     """通过官方 API 获取实时粉丝数"""
