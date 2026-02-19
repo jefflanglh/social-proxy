@@ -81,23 +81,33 @@ def fetch_tiktok_count(sec_id):
 
 # --- 新增 Instagram 实时获取逻辑 ---
 def fetch_insta_count(username):
-    # 换成这个更直接的实时数据接口
+    # 使用这个更稳定的 API 端点
     url = f"https://api.socialcounts.org/v1/instagram-live-follower-count/{username}"
+    
+    # 更加完整的浏览器伪装
     headers = {
-        "User-Agent": "Mozilla/5.0",
-        "Origin": "https://socialcounts.org",
-        "Referer": "https://socialcounts.org/"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://socialcounts.org/",
+        "Origin": "https://socialcounts.org"
     }
+    
     try:
-        r = requests.get(url, headers=headers, timeout=8)
-        data = r.json()
+        # 增加 timeout 到 10 秒，给云函数留出反应时间
+        r = requests.get(url, headers=headers, timeout=10)
         
-        # 调试输出：如果依然是 0，我们能从这个 API 的返回值看原因
-        if "count" in data:
-            return str(data["count"])
-        return "0"
+        # 如果返回的是 200，说明请求成功了
+        if r.status_code == 200:
+            data = r.json()
+            if "count" in data:
+                return str(data["count"])
+        
+        # 如果被拦截，返回状态码辅助判断
+        return f"Error_{r.status_code}"
+        
     except Exception as e:
-        print(f"Error: {e}")
+        # 如果还是抓不到，我们可以把具体的错误简写出来
         return "Wait"
 
 @app.route('/')
