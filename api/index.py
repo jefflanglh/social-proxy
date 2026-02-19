@@ -81,20 +81,23 @@ def fetch_tiktok_count(sec_id):
 
 # --- 新增 Instagram 实时获取逻辑 ---
 def fetch_insta_count(username):
-    # 使用针对第三方工具优化的 API 镜像接口
-    url = f"https://www.socialcounts.org/api/instagram-live-follower-count/search/{username}"
+    # 换成这个更直接的实时数据接口
+    url = f"https://api.socialcounts.org/v1/instagram-live-follower-count/{username}"
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Referer": "https://www.socialcounts.org/"
+        "User-Agent": "Mozilla/5.0",
+        "Origin": "https://socialcounts.org",
+        "Referer": "https://socialcounts.org/"
     }
     try:
         r = requests.get(url, headers=headers, timeout=8)
         data = r.json()
-        # 接口返回的是一个搜索列表，通常第一个就是我们要的精准匹配
-        if "items" in data and len(data["items"]) > 0:
-            return str(data["items"][0]["followerCount"])
+        
+        # 调试输出：如果依然是 0，我们能从这个 API 的返回值看原因
+        if "count" in data:
+            return str(data["count"])
         return "0"
-    except:
+    except Exception as e:
+        print(f"Error: {e}")
         return "Wait"
 
 @app.route('/')
