@@ -5,8 +5,8 @@ import re
 app = Flask(__name__)
 
 # 配置你的 Twitch 密钥（建议稍后在 Vercel 环境变量里设置更安全）
-TWITCH_ID = "你的_CLIENT_ID" 
-TWITCH_SECRET = "你的_CLIENT_SECRET"
+TWITCH_ID = "gek7yufyjjtq00zurrejf1ame8myxd" 
+TWITCH_SECRET = "fsug5sx5efzcja4xm1mih7e4uezds0"
 
 def get_twitch_followers(username):
     try:
