@@ -4,9 +4,11 @@ import re
 
 app = Flask(__name__)
 
-# 配置你的 Twitch 密钥（建议稍后在 Vercel 环境变量里设置更安全）
-TWITCH_ID = "gek7yufyjjtq00zurrejf1ame8myxd" 
-TWITCH_SECRET = "fsug5sx5efzcja4xm1mih7e4uezds0"
+import os
+
+# 从 Vercel 的系统环境中读取，GitHub 上看不到具体的字
+TWITCH_ID = os.getenv('TWITCH_ID')
+TWITCH_SECRET = os.getenv('TWITCH_SECRET')
 
 def get_twitch_followers(username):
     try:
