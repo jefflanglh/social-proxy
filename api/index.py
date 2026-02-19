@@ -81,31 +81,32 @@ def fetch_tiktok_count(sec_id):
 
 # --- 新增 Instagram 实时获取逻辑 ---
 def fetch_insta_count(username):
-    # 直接访问博主的主页，伪装成搜索爬虫
-    url = f"https://www.instagram.com/{username}/"
+    # 使用 Counts.live 的高速 API，这个接口目前对云函数最友好
+    url = f"https://counts.live/api/instagram-follower-count/{username}/live"
+    
     headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-        "Accept-Language": "en-US,en;q=0.9"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "application/json"
     }
+    
     try:
-        r = requests.get(url, headers=headers, timeout=10)
+        # 设置更短的超时，如果这个不行，我们立刻切备用
+        r = requests.get(url, headers=headers, timeout=5)
         
-        # 即使被拦截返回 404/403，元数据有时依然在源码里
-        # 寻找类似于 "300M Followers" 的描述标签
-        # 我们寻找 <meta name="description" ... content="..."> 里的内容
-        match = re.search(r'([\d\.,MK\+]+)\s*Followers', r.text, re.IGNORECASE)
-        
-        if match:
-            # 提取数字部分
-            res = match.group(1).replace(',', '')
-            return res
-        
-        # 如果正则没抓到，尝试备用匹配（针对某些地区返回的 HTML）
-        match_alt = re.search(r'\"edge_followed_by\":\{\"count\":(\d+)\}', r.text)
-        if match_alt:
-            return match_alt.group(1)
+        if r.status_code == 200:
+            data = r.json()
+            # 该接口返回格式通常是 {"success": True, "count": 293000000}
+            if data.get("success") == True:
+                return str(data.get("count", "0"))
             
-        return "Wait" # 源码里确实没找到
+        # 备用方案：如果第一个接口不行，尝试另一个免 Token 的快速接口
+        alt_url = f"https://api.subscribercount.org/instagram/{username}"
+        r_alt = requests.get(alt_url, headers=headers, timeout=5)
+        if r_alt.status_code == 200:
+            data_alt = r_alt.json()
+            return str(data_alt.get("subscribers", "0"))
+
+        return "Wait"
     except:
         return "Wait"
 
