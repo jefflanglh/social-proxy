@@ -28,7 +28,7 @@ def get_twitch_token():
 def fetch_twitch_count(username):
     token = get_twitch_token()
     if not token: 
-        return "Error_Token_Auth_Failed" # 这里会直接显示在网页上，告诉你 Token 没拿到
+        return "Error_Token_Auth_Failed" 
     
     headers = {
         "Client-ID": TWITCH_CLIENT_ID,
@@ -48,7 +48,6 @@ def fetch_twitch_count(username):
         fol_url = f"https://api.twitch.tv/helix/channels/followers?broadcaster_id={user_id}"
         f_res = requests.get(fol_url, headers=headers, timeout=5).json()
         
-        # 调试重点：如果接口报错（比如权限问题），返回报错信息
         if "total" in f_res:
             return str(f_res["total"])
         elif "message" in f_res:
@@ -67,6 +66,22 @@ def fetch_fb_count(page_id):
     except:
         return "0"
 
+# --- 新增 TikTok 获取逻辑 ---
+def fetch_tiktok_count(sec_id):
+    url = f"https://countik.com/api/userinfo?sec_user_id={sec_id}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Referer": "https://countik.com/"
+    }
+    try:
+        r = requests.get(url, headers=headers, timeout=10)
+        data = r.json()
+        if data.get("status") == "success":
+            return str(data.get("followerCount", "0"))
+        return "0"
+    except:
+        return "0"
+
 @app.route('/')
 def home():
     pt = request.args.get('type', '').lower()
@@ -75,6 +90,7 @@ def home():
     
     if pt == 'fb': return fetch_fb_count(uid)
     if pt == 'twitch': return fetch_twitch_count(uid)
+    if pt == 'tiktok': return fetch_tiktok_count(uid) # 新增路由判断
     return "0"
 
 app = app
