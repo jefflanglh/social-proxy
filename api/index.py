@@ -20,7 +20,7 @@ def get_twitch_token():
         r = requests.post(url, params=params, timeout=5)
         res_data = r.json()
         if r.status_code != 200:
-            return None # 失败返回 None，方便后面判定
+            return None 
         return res_data.get("access_token")
     except:
         return None
@@ -35,7 +35,6 @@ def fetch_twitch_count(username):
         "Authorization": f"Bearer {token}"
     }
     try:
-        # 1. 获取 User ID
         user_url = f"https://api.twitch.tv/helix/users?login={username}"
         u_res = requests.get(user_url, headers=headers, timeout=5).json()
         
@@ -44,7 +43,6 @@ def fetch_twitch_count(username):
         
         user_id = u_res["data"][0]["id"]
         
-        # 2. 获取粉丝总数
         fol_url = f"https://api.twitch.tv/helix/channels/followers?broadcaster_id={user_id}"
         f_res = requests.get(fol_url, headers=headers, timeout=5).json()
         
@@ -66,7 +64,6 @@ def fetch_fb_count(page_id):
     except:
         return "0"
 
-# --- 新增 TikTok 获取逻辑 ---
 def fetch_tiktok_count(sec_id):
     url = f"https://countik.com/api/userinfo?sec_user_id={sec_id}"
     headers = {
@@ -82,6 +79,24 @@ def fetch_tiktok_count(sec_id):
     except:
         return "0"
 
+# --- 新增 Instagram 实时获取逻辑 ---
+def fetch_insta_count(username):
+    # 使用针对第三方工具优化的 API 镜像接口
+    url = f"https://www.socialcounts.org/api/instagram-live-follower-count/search/{username}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Referer": "https://www.socialcounts.org/"
+    }
+    try:
+        r = requests.get(url, headers=headers, timeout=8)
+        data = r.json()
+        # 接口返回的是一个搜索列表，通常第一个就是我们要的精准匹配
+        if "items" in data and len(data["items"]) > 0:
+            return str(data["items"][0]["followerCount"])
+        return "0"
+    except:
+        return "Wait"
+
 @app.route('/')
 def home():
     pt = request.args.get('type', '').lower()
@@ -90,7 +105,8 @@ def home():
     
     if pt == 'fb': return fetch_fb_count(uid)
     if pt == 'twitch': return fetch_twitch_count(uid)
-    if pt == 'tiktok': return fetch_tiktok_count(uid) # 新增路由判断
+    if pt == 'tiktok': return fetch_tiktok_count(uid)
+    if pt == 'ins': return fetch_insta_count(uid) # 这里的 uid 传入博主名字即可
     return "0"
 
 app = app
